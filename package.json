@@ -1,0 +1,12 @@
+{
+  "name": "image-phishing-checker",
+  "version": "1.0.0",
+  "description": "Chrome extension to check images for phishing links",
+  "main": "convert_icons.js",
+  "scripts": {
+    "generate-icons": "node convert_icons.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2"
+  }
+} 
