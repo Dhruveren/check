@@ -1,45 +1,36 @@
+// Initialize popup UI based on current extension state
 document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('toggle');
-  const status = document.getElementById('status');
-
-  // Get initial state
+  const toggleElement = document.getElementById('toggleProtection');
+  const statusElement = document.getElementById('status');
+  
+  // Get current state from background script
   chrome.runtime.sendMessage({ action: "getState" }, function(response) {
-    if (chrome.runtime.lastError) {
-      console.error("Error getting state:", chrome.runtime.lastError);
-      return;
-    }
-    
-    console.log("Got state from background:", response);
-    if (response && response.state !== undefined) {
-      toggle.checked = response.state;
-      status.textContent = response.state ? "On" : "Off";
-      console.log("Extension state set to:", response.state ? "On" : "Off");
-    } else {
-      console.log("No state returned, defaulting to Off");
-      toggle.checked = false;
-      status.textContent = "Off";
+    if (response && response.active !== undefined) {
+      toggleElement.checked = response.active;
+      updateStatusText(response.active);
     }
   });
-
-  // Handle toggle changes
-  toggle.addEventListener('change', function() {
-    const isActive = toggle.checked;
-    status.textContent = isActive ? "On" : "Off";
-    console.log("Toggle changed to:", isActive);
+  
+  // Handle toggle switch changes
+  toggleElement.addEventListener('change', function() {
+    const isActive = toggleElement.checked;
     
+    // Update status text
+    updateStatusText(isActive);
+    
+    // Send message to background script
     chrome.runtime.sendMessage({ 
       action: "toggle", 
-      state: isActive 
+      active: isActive 
     }, function(response) {
-      if (chrome.runtime.lastError) {
-        console.error("Error toggling state:", chrome.runtime.lastError);
-        return;
-      }
-      
       console.log("Toggle response:", response);
-      if (response && response.success) {
-        console.log("Extension state successfully updated");
-      }
     });
   });
+  
+  function updateStatusText(isActive) {
+    statusElement.textContent = isActive ? 
+      "Protection is active" : 
+      "Protection is disabled";
+    statusElement.style.color = isActive ? "#4CAF50" : "#F44336";
+  }
 });
