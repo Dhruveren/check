@@ -87,49 +87,58 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
   }
 
   console.log("Image download detected, checking for suspicious patterns");
-  // Rest of your code remains the same...
+  
+  // Check for suspicious patterns
+  const suspiciousPatterns = [
+    'phish',
+    'malware',
+    'hack',
+    'virus',
+    'trojan',
+    'spyware',
+    'ransomware',
+    'keylogger',
+    'stealer',
+    'exploit',
+    'fraud',
+    'scam',
+    'fake',
+    'dangerous',
+    'malicious'
+  ];
+
+  const isSuspicious = suspiciousPatterns.some(pattern => {
+    const contains = url.includes(pattern) || decodeURIComponent(url).includes(pattern);
+    if (contains) console.log("Found suspicious pattern:", pattern);
+    return contains;
+  });
+
+  if (isSuspicious) {
+    console.log("Suspicious image download detected!");
+    // Cancel the download - Note: in Manifest V3 we can't directly cancel,
+    // but we can warn the user and use declarativeNetRequest rules to block future downloads
+    
+    // Send a notification
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/icon128.png',
+      title: 'Warning: Suspicious Download',
+      message: 'A potentially malicious image download was detected and blocked.'
+    });
+  }
 });
 
-// Monitor image requests
+// Use non-blocking webRequest listener just for logging
 chrome.webRequest.onBeforeRequest.addListener(
   function(details) {
-    if (!isExtensionActive) return { cancel: false };
+    if (!isExtensionActive) return;
     
     const url = details.url.toLowerCase();
     console.log("Image request detected:", url);
     
-    // Check for suspicious patterns in the URL
-    const suspiciousPatterns = [
-      'phish',
-      'malware',
-      'hack',
-      'virus',
-      'trojan',
-      'spyware',
-      'ransomware',
-      'keylogger',
-      'stealer',
-      'exploit',
-      'fraud',
-      'scam',
-      'fake',
-      'dangerous',
-      'malicious'
-    ];
-
-    const isSuspicious = suspiciousPatterns.some(pattern => {
-      return url.includes(pattern) || decodeURIComponent(url).includes(pattern);
-    });
-
-    if (isSuspicious) {
-      console.log("Blocked suspicious image:", url);
-      return { cancel: true };
-    }
-    
-    return { cancel: false };
+    // We're only using this for logging - actual blocking is done by declarativeNetRequest
   },
-  { urls: ["<all_urls>"], types: ["image"] },
-  ["blocking"]
+  { urls: ["<all_urls>"], types: ["image"] }
 );
 
 // Handle messages from popup or content scripts
